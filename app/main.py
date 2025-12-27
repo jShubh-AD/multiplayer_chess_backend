@@ -1,15 +1,19 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from app.ws.manager import ConnectionManager
+from app.ws.manager import GameManager
 
 app = FastAPI()
-manager = ConnectionManager()
+manager = GameManager()
 
 @app.websocket("/ws")
-async def web_endpoint(websocket: WebSocket, room_id: str):
-    await manager.connectUser(ws=websocket,room_id=room_id)
+async def websocket_endpoint(ws: WebSocket):
+    await ws.accept()
+    print("connect with user")
+    await manager.connectUser(ws=ws)
     try:
         while True:
-            data = await websocket.receive_text()
-            await manager.broadcast(room_id=room_id, message=data)
+            data = await ws.receive_text()
+            await manager.make_move(message=data, ws= ws)
+
     except WebSocketDisconnect:
-        await manager.disconnect(room_id=room_id, websocket=websocket)
+        await manager.disconnect(ws)
+
