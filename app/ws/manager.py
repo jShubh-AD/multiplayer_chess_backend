@@ -1,5 +1,6 @@
 from fastapi import WebSocket
-from app.ws.game import Game
+from app.ws.game import Game, GameMesssage
+from app.constants.enums import MessageType, Color
 from app.ws.helpers import WsHelper
 import chess
 import uuid
@@ -12,13 +13,17 @@ class GameManager:
     async def connectUser(self, ws: WebSocket):
         try: 
             if(self.waitingUser):
-                await ws.send_text("Found a perfect match for you.")
                 await self.start_game(self.waitingUser, ws)
                 self.waitingUser = None
                 return
             else:
                 self.waitingUser = ws
-                await ws.send_text("Waiting for a perfect match.")
+                await ws.send_json(
+                    GameMesssage(
+                        type= MessageType.WAITING,
+                        message= "Waiting for another player to join"
+                    ).model_dump()
+                )
                 ws.state.game_id = None
                 return
         except any as e:
@@ -109,4 +114,10 @@ class GameManager:
         p1.state.game_id = game_id
         p2.state.game_id = game_id
 
-        await self.broadcast(game_id, {"message": "Game started"})
+        await self.broadcast(
+            game_id, 
+            GameMesssage(
+                type= MessageType.GAME_START,
+                message= "Game Starts Now",
+              ).model_dump()
+            )
