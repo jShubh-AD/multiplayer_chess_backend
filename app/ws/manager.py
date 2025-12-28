@@ -1,5 +1,5 @@
 from fastapi import WebSocket
-from app.ws.game import Game, GameMesssage
+from app.ws.game import Game, GameMessage
 from app.constants.enums import MessageType, Color
 from app.ws.helpers import WsHelper
 import chess
@@ -19,7 +19,7 @@ class GameManager:
             else:
                 self.waitingUser = ws
                 await ws.send_json(
-                    GameMesssage(
+                    GameMessage(
                         type= MessageType.WAITING,
                         message= "Waiting for another player to join"
                     ).model_dump()
@@ -88,15 +88,15 @@ class GameManager:
 
         await self.broadcast(
             game_id,
-            {
-                "move": message,
-                "fen": board.fen(),
-                "state": result
-            }
+            GameMessage(
+                type=MessageType.MOVE,
+                move=message,
+                board=board.fen(),
+            ).model_dump()
         )
 
 
-    async def broadcast(self, game_id: str, payload: dict):
+    async def broadcast(self, game_id: str, payload: GameMessage):
         game = self.games.get(game_id)
         if not game:
             return
@@ -114,10 +114,17 @@ class GameManager:
         p1.state.game_id = game_id
         p2.state.game_id = game_id
 
-        await self.broadcast(
-            game_id, 
-            GameMesssage(
-                type= MessageType.GAME_START,
-                message= "Game Starts Now",
+        await p1.send_json(
+            GameMessage(
+             type=MessageType.GAME_START,
+             message="Game Starts Now",
+             color=Color.WHITE
+            ).model_dump()
+        )
+        await p2.send_json(
+            GameMessage(
+                type=MessageType.GAME_START,
+                message="Game Starts Now",
+                color=Color.BLACK
               ).model_dump()
             )

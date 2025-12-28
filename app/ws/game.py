@@ -14,9 +14,11 @@ class Game :
     self.board = chess.Board()
 
 
-class GameMesssage (BaseModel):
+class GameMessage (BaseModel):
   type: MessageType
   message : str | None = None
+  move: str | None = None
+  board : str |None = None
   data : str | None = None
   color: Color | None = None
   turn : Color | None = None
