@@ -17,3 +17,6 @@ async def websocket_endpoint(ws: WebSocket):
     except WebSocketDisconnect:
         await manager.disconnect(ws)
 
+@app.get("/")
+async def start_server():
+    return {"message":"starting server"}
