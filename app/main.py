@@ -12,7 +12,7 @@ async def websocket_endpoint(ws: WebSocket):
     try:
         while True:
             data = await ws.receive_text()
-            await manager.make_move(message=data, ws= ws)
+            await manager.message_handeler(data, ws)
 
     except WebSocketDisconnect:
         await manager.disconnect(ws)
