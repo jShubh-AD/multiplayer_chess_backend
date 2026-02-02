@@ -21,3 +21,6 @@ class MessageType(str, Enum):
     WHITE_WINS = "white_win"
     BLACK_WINS = "black_win"
     TIMEOUT = "timeout"
+    OFFER = "offer"
+    ANSWER = "answer"
+    ICE = "ice"

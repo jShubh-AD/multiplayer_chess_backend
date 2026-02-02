@@ -100,6 +100,8 @@ class GameManager:
 
             case MessageType.CHALLENGE:
                 await self.challenge_player(ws=ws, msg=msg)
+            case MessageType.OFFER | MessageType.ANSWER | MessageType.ICE:
+                await self.forward_signal(ws, msg)
 
 
     # handle broadcasting chat msg
@@ -129,14 +131,14 @@ class GameManager:
 
         await ws.send_json(
             GameMessage(
-             type=MessageType.GAME_START,
+             type=MessageType.REMATCH_ACCEPT,
              message="Game Starts Now",
              color=Color.WHITE
             ).model_dump()
         )
         await other_player.send_json(
             GameMessage(
-                type=MessageType.GAME_START,
+                type=MessageType.REMATCH_ACCEPT,
                 message="Game Starts Now",
                 color=Color.BLACK
               ).model_dump())
@@ -206,3 +208,14 @@ class GameManager:
                 move=message,
                 board=board.fen(),
             ).model_dump())
+        
+    async def forward_signal(self, ws: WebSocket, msg: GameMessage):
+        game_id = WsHelper.get_game_id(ws)
+        if not game_id: return
+
+        game = self.games.get(game_id)
+        if not game: return
+
+        print(msg)
+        other = game.player1 if ws is game.player2 else game.player2
+        await other.send_json(msg.model_dump())
